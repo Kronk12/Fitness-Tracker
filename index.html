@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Tracker Dashboard</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 { color: #4CAF50; letter-spacing: 1px; }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            margin: 30px auto;
+        }
+        .card {
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border-top: 4px solid #4CAF50;
+        }
+        .card h3 { margin-top: 0; color: #aaaaaa; font-size: 1.1rem; text-transform: uppercase;}
+        .card .value { font-size: 2.5rem; font-weight: bold; margin: 10px 0; }
+        .status-bar {
+            background-color: #1e1e1e;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 800px;
+            margin: 0 auto;
+            color: #888;
+        }
+        .good-form { color: #4CAF50; }
+        .bad-form { color: #f44336; }
+        .form-card { border-top-color: #2196F3; } /* Differentiate the form card */
+    </style>
+</head>
+<body>
+    <h1>Wearable Form Analyzer</h1>
+    <div class="status-bar">
+        Device Status: <span id="status" style="color: #4CAF50;">Loading...</span>
+    </div>
+
+    <div class="grid-container">
+        <div class="card">
+            <h3>Heart Rate</h3>
+            <div class="value"><span id="hr">--</span> <span style="font-size: 1rem; color: #888;">bpm</span></div>
+        </div>
+        <div class="card">
+            <h3>Current Exercise</h3>
+            <div class="value" style="font-size: 1.8rem;"><span id="exercise">--</span></div>
+        </div>
+        <div class="card">
+            <h3>Reps</h3>
+            <div class="value"><span id="reps">--</span></div>
+        </div>
+        <div class="card form-card">
+            <h3>Form Analysis</h3>
+            <div class="value" style="font-size: 1.5rem;"><span id="form">--</span></div>
+        </div>
+    </div>
+
+    <script>
+        function fetchMetrics() {
+            fetch('/api/data')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('status').innerText = data.status;
+                    document.getElementById('hr').innerText = data.heart_rate;
+                    document.getElementById('exercise').innerText = data.exercise;
+                    document.getElementById('reps').innerText = data.reps;
+                    
+                    const formElement = document.getElementById('form');
+                    formElement.innerText = data.form_feedback;
+                    
+                    // Simple color logic for the form analysis feedback
+                    if (data.form_feedback === "Perfect form") {
+                        formElement.className = "good-form";
+                    } else if (data.form_feedback !== "N/A") {
+                        formElement.className = "bad-form";
+                    } else {
+                        formElement.className = "";
+                    }
+                })
+                .catch(err => console.error("Error fetching data:", err));
+        }
+        
+        // Poll the Python API every 1.5 seconds
+        setInterval(fetchMetrics, 1500);
+        fetchMetrics(); // Fire immediately on load
+    </script>
+</body>
+</html>
