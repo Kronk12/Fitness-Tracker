@@ -40,7 +40,28 @@
         }
         .good-form { color: #4CAF50; }
         .bad-form { color: #f44336; }
-        .form-card { border-top-color: #2196F3; } /* Differentiate the form card */
+        .form-card { border-top-color: #2196F3; } 
+        
+        /* New Button Styles */
+        .control-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px auto;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+            width: 250px;
+        }
+        .btn-stop {
+            background-color: #f44336;
+        }
     </style>
 </head>
 <body>
@@ -48,6 +69,8 @@
     <div class="status-bar">
         Device Status: <span id="status" style="color: #4CAF50;">Loading...</span>
     </div>
+
+    <button id="trackBtn" class="control-btn" onclick="toggleTracking()">Start Tracking</button>
 
     <div class="grid-container">
         <div class="card">
@@ -69,6 +92,40 @@
     </div>
 
     <script>
+        let isTracking = false;
+
+        // Function to toggle tracking state and notify backend
+        function toggleTracking() {
+            isTracking = !isTracking;
+            const btn = document.getElementById('trackBtn');
+
+            // Update UI
+            if (isTracking) {
+                btn.innerText = "Stop Tracking";
+                btn.classList.add("btn-stop");
+            } else {
+                btn.innerText = "Start Tracking";
+                btn.classList.remove("btn-stop");
+            }
+
+            // Send command to Python API
+            fetch('/api/tracking', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ tracking: isTracking })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    console.error("Server failed to update tracking state.");
+                    // Revert UI if needed, omitted here for simplicity
+                }
+            })
+            .catch(err => console.error("Error sending tracking command:", err));
+        }
+
+        // Existing polling function
         function fetchMetrics() {
             fetch('/api/data')
                 .then(response => response.json())
@@ -81,7 +138,6 @@
                     const formElement = document.getElementById('form');
                     formElement.innerText = data.form_feedback;
                     
-                    // Simple color logic for the form analysis feedback
                     if (data.form_feedback === "Perfect form") {
                         formElement.className = "good-form";
                     } else if (data.form_feedback !== "N/A") {
@@ -93,9 +149,8 @@
                 .catch(err => console.error("Error fetching data:", err));
         }
         
-        // Poll the Python API every 1.5 seconds
         setInterval(fetchMetrics, 1500);
-        fetchMetrics(); // Fire immediately on load
+        fetchMetrics(); 
     </script>
 </body>
 </html>
